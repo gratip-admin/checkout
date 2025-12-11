@@ -16,7 +16,7 @@ import { PaymentState } from "@/app/page"
 interface PaymentFormProps {
   paymentState: PaymentState
   userDetails: any
-  token: string
+  token: string | null
   isPendingFinalizeCardPayment: boolean
   finalizeCardPayment: (payload: any) => void
 }
