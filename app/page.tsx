@@ -50,6 +50,7 @@ function PageContent() {
   const { data, isLoading, error } = useQuery({
     queryFn: () => verifyToken(token ?? ""),
     queryKey: ["verify token", token],
+    enabled: !!token,
   });
 
   const {mutate: _finalizeCardPayment, isPending: isPendingFinalizeCardPayment} = useMutation({
@@ -108,7 +109,7 @@ function PageContent() {
     );
   }
 
-  if (error || !token) {
+  if (error || (!token && !transactionReference)) {
     return <NotFound />;
   }
 
