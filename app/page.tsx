@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
 import { PaymentForm } from "@/components/payment/payment-form"
@@ -18,7 +18,7 @@ const queryClient = new QueryClient()
 
 export type PaymentState = "form" | "success" | "failed" | "pending"
 
-export default function Page() {
+function PageContent() {
   const searchParams = useSearchParams()
   const transactionReference = searchParams.get("transactionReference")
   const token = searchParams.get("token")
@@ -154,5 +154,30 @@ export default function Page() {
       </div>
       </div>
     </QueryClientProvider>
+  )
+}
+
+export default function Page() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-[#FFFEEA]">
+          <div className="w-fit mx-auto pt-8">
+            <ClipLoader
+              color={"#000"}
+              loading={true}
+              size={25}
+              cssOverride={{ marginTop: "5px" }}
+              aria-label="Loading Spinner"
+            />
+          </div>
+          <p className="text-center text-sm text-[#696D71] mt-2">
+            A moment please...
+          </p>
+        </div>
+      }
+    >
+      <PageContent />
+    </Suspense>
   )
 }
