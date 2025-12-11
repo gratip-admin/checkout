@@ -32,9 +32,12 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Build redirect URL with all parameters
+    // Build redirect URL to the main page
     const url = new URL(request.url)
     url.pathname = "/"
+    
+    // Clear existing search params and add parsed ones
+    url.search = ""
     
     // Add all parsed parameters to the query string
     Object.entries(params).forEach(([key, value]) => {
@@ -43,7 +46,7 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    // Preserve any existing query parameters from the original request
+    // Preserve any existing query parameters from the original request URL
     const originalParams = new URL(request.url).searchParams
     originalParams.forEach((value, key) => {
       if (!url.searchParams.has(key)) {
@@ -51,7 +54,7 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    // Redirect to the page with GET method
+    // Redirect to the page with GET method (303 forces GET)
     return NextResponse.redirect(url.toString(), { status: 303 })
   } catch (error) {
     console.error("Error handling payment redirect:", error)
@@ -59,9 +62,20 @@ export async function POST(request: NextRequest) {
     // Fallback: redirect to page anyway with error indicator
     const url = new URL(request.url)
     url.pathname = "/"
+    url.search = ""
     url.searchParams.set("error", "redirect_failed")
     
     return NextResponse.redirect(url.toString(), { status: 303 })
   }
+}
+
+// Also handle GET requests (some gateways use GET for callbacks)
+export async function GET(request: NextRequest) {
+  const url = new URL(request.url)
+  const redirectUrl = new URL(request.url)
+  redirectUrl.pathname = "/"
+  
+  // Forward all query parameters to the main page
+  return NextResponse.redirect(redirectUrl.toString(), { status: 302 })
 }
 
