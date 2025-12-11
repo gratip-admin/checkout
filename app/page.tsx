@@ -86,6 +86,7 @@ function PageContent() {
       setPaymentState("pending")
       _finalizeCardPayment({transactionReference: transactionReference})
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [transactionReference])
 
   if (isLoading || (paymentState === "pending" && transactionReference)) {
@@ -115,7 +116,8 @@ function PageContent() {
     <QueryClientProvider client={queryClient}>
       <div className=" ">
       {paymentState !== "form" && <TopNav />}
-      <div className="min-h-screen bg-[#FFFDE7] flext items-center mx-auto p-4">
+      <div className="min-h-screen bg-[#FFFDE7]  p-4">
+        {/* <div className="w-fit mx-auto"> */}
         <AnimatePresence mode="wait">
           {paymentState === "form" && (
             <motion.div
@@ -151,8 +153,9 @@ function PageContent() {
             </motion.div>
           )}
         </AnimatePresence>
+        </div>
       </div>
-      </div>
+      {/* </div> */}
     </QueryClientProvider>
   )
 }

@@ -1,12 +1,10 @@
 "use client"
 import Image from "next/image"
-import Link from "next/link"
 import { getCloudinaryUrl } from "@/utils/cloudinary"
 import { Formik, Form, Field } from "formik"
 import { motion, AnimatePresence } from "framer-motion"
-import { Mail, ChevronDown, Lock, X } from "lucide-react"
+import { Mail, ChevronDown, Lock } from "lucide-react"
 import { useMutation } from "@tanstack/react-query"
-import { useState, useEffect, useCallback } from "react"
 import { CardInput } from "./card-input"
 import { PhoneInput } from "./phone-input"
 import { paymentValidationSchema,  type PaymentFormValues } from "@/lib/validation/payment-schema"
@@ -23,88 +21,28 @@ interface PaymentFormProps {
   finalizeCardPayment: (payload: any) => void
 }
 
-// 3D Secure Modal Component
-function ThreeDSecureModal({ 
-  html, 
-  onClose 
-}: { 
-  html: string
-  onClose: () => void 
-}) {
-  const iframeRef = useCallback((node: HTMLIFrameElement | null) => {
-    if (node) {
-      const doc = node.contentDocument || node.contentWindow?.document
-      if (doc) {
-        doc.open()
-        doc.write(html)
-        doc.close()
-      }
-    }
-  }, [html])
-
-  // Listen for messages from the 3DS iframe (some providers post messages on completion)
-  useEffect(() => {
-    const handleMessage = (event: MessageEvent) => {
-      console.log("event.data", event)
-      if (event.data?.type === '3DS_COMPLETE' || event.data?.status) {
-        onClose()
-      }
-    }
-
-    window.addEventListener('message', handleMessage)
-    return () => window.removeEventListener('message', handleMessage)
-  }, [onClose])
-
-  return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
-    >
-      <motion.div
-        initial={{ scale: 0.9, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        exit={{ scale: 0.9, opacity: 0 }}
-        className="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl overflow-hidden"
-      >
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-100">
-          <div className="flex items-center gap-2">
-            <Lock className="w-4 h-4 text-green-600" />
-            <span className="text-sm font-medium text-gray-700">Secure Authentication</span>
-          </div>
-          <button
-            onClick={onClose}
-            className="p-1 rounded-full hover:bg-gray-100 transition-colors"
-            aria-label="Close"
-          >
-            <X className="w-5 h-5 text-gray-500" />
-          </button>
-        </div>
-        
-        {/* 3DS Iframe Container */}
-        <div className="w-full h-[500px] bg-gray-50">
-          <iframe
-            ref={iframeRef}
-            className="w-full h-full border-0"
-            title="3D Secure Authentication"
-            sandbox="allow-forms allow-scripts allow-same-origin allow-top-navigation"
-          />
-        </div>
-        
-        {/* Footer */}
-        <div className="p-3 bg-gray-50 border-t border-gray-100">
-          <p className="text-xs text-gray-500 text-center">
-            Complete the verification in the window above to proceed with your payment
-          </p>
-        </div>
-      </motion.div>
-    </motion.div>
-  )
+// Handle 3DS HTML by rendering and auto-submitting the form
+function handleThreeDSRedirect(html: string): void {
+  // Write the HTML to the document and let the embedded script auto-submit
+  // The HTML contains a form with POST method that auto-submits via script
+  const transformedHtml = html
+    .replace(/target=['"]challengeFrame['"]/gi, "target='_self'")
+    .replace(/<iframe[^>]*><\/iframe>/gi, '')
+  
+  document.open()
+  document.write(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Secure Authentication</title>
+    </head>
+    <body>${transformedHtml}</body>
+    </html>
+  `)
+  document.close()
 }
-
-
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -179,45 +117,34 @@ export function PaymentForm({ userDetails, paymentState, token, isPendingFinaliz
     cvc: "",
   }
 
-  const [threeDSHtml, setThreeDSHtml] = useState<string | null>(null)
-  const [transactionRef, setTransactionRef] = useState<string | null>(null)
-
   const { showToast } = useToast()
   const { countryCode } = useGetCountryCode()
-
-  // Handle 3DS modal close - finalize payment after authentication
-  const handleThreeDSClose = useCallback(() => {
-    setThreeDSHtml(null)
-    if (transactionRef) {
-      finalizeCardPayment({ transactionReference: transactionRef })
-      setTransactionRef(null)
-    }
-  }, [transactionRef, finalizeCardPayment])
 
   const mutation = useMutation({
     mutationFn: (payload: any) => submitCardDetails(payload),
     onSuccess: (data: any) => {
-      // Handle 3D Secure HTML response
-      if (data?.data?.three_ds_html || data?.three_ds_html) {
-        const html = data?.data?.three_ds_html || data?.three_ds_html
-        setThreeDSHtml(html)
-        // Store transaction reference for finalization after 3DS
-        if (data?.data?.transactionReference) {
-          setTransactionRef(data.data.transactionReference)
-        }
+      // Handle 3DS HTML (requires POST, not GET redirect)
+      const threeDSHtml = data?.data?.three_ds_html || data?.three_ds_html
+      if (threeDSHtml) {
+        handleThreeDSRedirect(threeDSHtml)
         return
       }
 
-      if(data?.data?.paymentUrl){
-        window.location.href = data.data.paymentUrl
+      // Handle payment URL redirect
+      const paymentUrl = data?.data?.paymentUrl || data?.paymentUrl
+      if (paymentUrl) {
+        window.location.href = paymentUrl
         return
       }
-      if(data?.redirectUrl || data?.data?.redirectUrl){
-        window.location.href = data?.redirectUrl || data?.data?.redirectUrl
+      
+      const redirectUrl = data?.data?.redirectUrl || data?.redirectUrl
+      if (redirectUrl) {
+        window.location.href = redirectUrl
         return
       }
     
-      finalizeCardPayment({transactionReference: data.data?.transactionReference})
+      // Direct finalization (no redirect required)
+      finalizeCardPayment({ transactionReference: data.data?.transactionReference })
     },
     onError: (error: any) => {
        showToast(
@@ -240,7 +167,7 @@ export function PaymentForm({ userDetails, paymentState, token, isPendingFinaliz
       variants={containerVariants}
       initial="hidden"
       animate="visible"
-      className="bg-white rounded-2xl  border border-[#DDDDDD66] p-6 sm:p-8 my-12 w-full max-w-lg"
+      className="bg-white rounded-2xl  border border-[#DDDDDD66] p-6 sm:p-8 my-12 w-full mx-auto max-w-lg"
     >
       {/* Logo */}
       <motion.div variants={itemVariants} className="flex flex-col items-center mb-16">
@@ -257,7 +184,7 @@ export function PaymentForm({ userDetails, paymentState, token, isPendingFinaliz
           />
         </div>
       
-        <h1 className="text-[1.5rem] font-semibold leading-0 text-gray-800">Payment Gateway</h1>
+        <h1 className="text-[1.5rem] sm:text-[1.7rem] font-medium leading-0 text-gray-800">Payment Gateway</h1>
       </motion.div>
      
      {userDetails?.currency && userDetails?.amount && (
@@ -477,16 +404,6 @@ export function PaymentForm({ userDetails, paymentState, token, isPendingFinaliz
           )
         }}
       </Formik>
-
-      {/* 3D Secure Authentication Modal */}
-      <AnimatePresence>
-        {threeDSHtml && (
-          <ThreeDSecureModal 
-            html={threeDSHtml} 
-            onClose={handleThreeDSClose} 
-          />
-        )}
-      </AnimatePresence>
     </motion.div>
   )
 }
