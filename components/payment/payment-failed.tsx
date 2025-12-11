@@ -35,13 +35,13 @@ export function PaymentFailed({ onRetry }: PaymentFailedProps) {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          className="text-3xl font-semibold text-gray-800 mb-8"
+          className="text-3xl font-semibold text-gray-800 text-center mb-8"
         >
           Failed
         </motion.h2>
 
         {/* Retry Button */}
-        <motion.button
+        {/* <motion.button
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
@@ -51,7 +51,7 @@ export function PaymentFailed({ onRetry }: PaymentFailedProps) {
           className="w-48 py-3 border border-gray-300 rounded-full text-gray-800 font-medium hover:bg-gray-50 transition-colors"
         >
           Try again
-        </motion.button>
+        </motion.button> */}
       </div>
     </div>
   )
