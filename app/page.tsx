@@ -20,7 +20,7 @@ export type PaymentState = "form" | "success" | "failed" | "pending"
 
 function PageContent() {
   const searchParams = useSearchParams()
-  const transactionReference = searchParams.get("transactionReference")
+  const transactionReference = searchParams.get("TransactionReference")
   const token = searchParams.get("token")
   const { showToast } = useToast()
   const [paymentState, setPaymentState] = useState<PaymentState>("form")
