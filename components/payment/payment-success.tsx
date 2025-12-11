@@ -75,13 +75,13 @@ export function PaymentSuccess({ amount, currency, onClose }: PaymentSuccessProp
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
-          className="text-gray-600 mb-8"
+          className="text-gray-600 mb-8 text-center"
         >
           Your {getCurrencySymbol(currency)} {Number(amount).toLocaleString()} payment was sent successfully
         </motion.p>
 
         {/* Close Button */}
-        <motion.button
+        {/* <motion.button
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6 }}
@@ -91,7 +91,7 @@ export function PaymentSuccess({ amount, currency, onClose }: PaymentSuccessProp
           className="w-48 py-3 border border-gray-300 rounded-full text-gray-800 font-medium hover:bg-gray-50 transition-colors"
         >
           Close
-        </motion.button>
+        </motion.button> */}
       </div>
     </div>
   )
