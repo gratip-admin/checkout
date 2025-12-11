@@ -125,7 +125,7 @@ export default function Page() {
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.3 }}
             >
-              <PaymentForm paymentState={paymentState} isPendingFinalizeCardPayment={isPendingFinalizeCardPayment} finalizeCardPayment={_finalizeCardPayment} token={token} userDetails={data?.data} onSuccess={handlePaymentSuccess} onFailed={handlePaymentFailed} />
+              <PaymentForm paymentState={paymentState} isPendingFinalizeCardPayment={isPendingFinalizeCardPayment} finalizeCardPayment={_finalizeCardPayment} token={token} userDetails={data?.data} />
             </motion.div>
           )}
           {paymentState === "success" && (
