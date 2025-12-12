@@ -1,6 +1,7 @@
 // components/Toast.tsx
 import React, { useEffect, useState } from "react";
 import styles from "./Notify.module.scss";
+import {InformationCircleIcon, CheckIcon} from "@heroicons/react/24/outline";
 
 interface ToastProps {
   message: string;
@@ -36,13 +37,15 @@ const Toast: React.FC<ToastProps> = ({ message, type, onClose }) => {
               : `${styles.notify} font-satoshi`
           }
         >
+          <div className="flex items-start justify-center">{type === "error" ? (
+            <InformationCircleIcon className="size-6 text-[#EF4444]  stroke-2" />
+          ) : (
+            <CheckIcon className="size-5 text-[#1AB837] stroke-2" />
+          )}</div>
           <div className={`${styles.notify__message} break-words text-wrap`}>
             <p className="break-words text-wrap">{message}</p>
           </div>
-          <div className={styles.notify__action}>
-            <button onClick={() => handleDismiss()}>Ok</button>
-            <button onClick={() => handleDismiss()}>Dismiss</button>
-          </div>
+          
         </div>
       )}
     </>

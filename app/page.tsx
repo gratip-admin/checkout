@@ -61,13 +61,14 @@ function PageContent() {
           setTimeout(() => {
             _finalizeCardPayment({transactionReference: transactionReference})
           }, 5000)
+          return
         }
         if(data?.data?.status === "success"){
           handlePaymentSuccess(data.data)
+          return
         }
-        else{
-          setPaymentState("failed")
-        }
+        setPaymentState("failed")
+        
     },
     onError: (error: any) => {
         setPaymentState("failed")
